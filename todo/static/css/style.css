@@ -1,0 +1,25 @@
+.sidebar {
+    min-height: 100vh;
+    padding-top: 64px;
+}
+form {
+    margin: 0;
+}
+.toggleCompleted[aria-expanded=false]::after {
+    content: "показать выполненные задачи";
+}
+.toggleCompleted[aria-expanded=true]::after {
+    content: "скрыть выполненные задачи";
+}
+th {
+    text-transform: uppercase;
+}
+.tag-link span {
+    display: inline-block;
+}
+.tag-link span::first-letter {
+    text-transform: uppercase;
+}
+.form-control-color {
+    height: 38px !important;
+}

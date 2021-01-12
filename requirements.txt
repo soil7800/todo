@@ -1,0 +1,8 @@
+asgiref==3.3.1
+Django==3.1.4
+psycopg2-binary==2.8.6
+python-dotenv==0.15.0
+pytz==2020.4
+six==1.15.0
+sqlparse==0.4.1
+transliterate==1.10.2

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div>
+    {% for type, queryset in tasks.items %}
+    {% if queryset %}
+    <div {% if type == 'complited' %}class="collapse" id="collapseCompleted"{% endif %}>
+        {% if type == 'overdue' and queryset %}
+        <h2>Просрочено</h2>
+        {% elif type == 'today' and queryset %}
+        <h2>Сегодня</h2>
+        {% elif type == 'coming' and queryset %}
+        <h2>Предстоящие</h2>
+        {% elif type == 'complited' and queryset %}
+        <h2>Завершены</h2>
+        {% elif type == 'archived' and queryset %}
+        <h2>Архив</h2>
+        {% endif %}
+        {% for task in queryset %}
+        <div class="d-flex bg-light shadow-sm my-3 align-items-center">
+            <div class="pe-3">
+                <form class="" method="POST" action="">
+                    {% csrf_token %}
+                    
+                    <input type="hidden" type="text" name="id" value="{{ task.id }}">
+                    <button  class="btn" onclick="this.form.submit()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-calendar-check" viewBox="0 0 16 16">
+                            <path d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0z"/>
+                            <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+            <div class="col-5 me-auto"><a class="text-dark text-decoration-none" href="{{task.get_absolute_url}}">{{ task.title }}</a></div>
+            {% if task.tag %}
+            <div class="px-2"><span class="badge text-dark" style="background-color: {{task.tag.color}}; color: {{task.tag.get_text_color}} !important;">{{ task.tag }}</span></div>
+            {% endif %}
+            <div class="px-2">{{ task.deadline_date|date:"j b Y" }}</div>
+        </div>
+        {% endfor %}
+        {% if type == 'coming' or type == 'today' %}
+        <div>
+            <a class="btn" href="{% url 'add-task' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-calendar-plus" viewBox="0 0 16 16">
+                    <path d="M8 7a.5.5 0 0 1 .5.5V9H10a.5.5 0 0 1 0 1H8.5v1.5a.5.5 0 0 1-1 0V10H6a.5.5 0 0 1 0-1h1.5V7.5A.5.5 0 0 1 8 7z"/>
+                    <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
+                </svg>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    {% if type == 'complited' %}
+    <a class="text-secondary toggleCompleted" data-bs-toggle="collapse" href="#collapseCompleted" role="button" aria-expanded="false" aria-controls="collapseCompleted"></a>
+    {% endif %}           
+    {% endif %}
+    {% endfor %}
+</div>
+
+{% endblock %}

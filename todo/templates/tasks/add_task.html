@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="mx-auto col-6">
+    <h2>Новая задача:</h2>
+    <form method="POST" action="{% url 'add-task' %}">
+        {% csrf_token %}
+        <div class="my-2">
+            {{ form.title.errors }}
+            <label class="form-label" for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+            <input maxlength="{{ form.title.field.max_length }}" required name="title" class="form-control" id="{{ form.title.id_for_label }}" type="text">
+        </div>
+        <div class="my-2">
+            {{ form.description.errors }}
+            <label class="form-label" for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+            <textarea class="form-control" name="description" id="{{ form.description.id_for_label }}" required cols="30" rows="10"></textarea>
+        </div>
+        <div class="row">
+            <div class="col-6 my-2 d-flex justify-content-end flex-column">
+                {{ form.deadline_date.errors }}
+                <label class="form-label" for="{{ form.deadline_date.id_for_label }}">{{ form.deadline_date.label }}</label>
+                <input name="deadline_date" class="form-control" id="{{ form.deadline_date.id_for_label }}" type="date">
+            </div>
+            <div class="col-6 my-2 d-flex justify-content-end flex-column">
+                {{ form.deadline_time.errors }}
+                <label class="form-label" for="{{ form.deadline_time.id_for_label }}">{{ form.deadline_time.label }}</label>
+                <input name="deadline_time" class="form-control" id="{{ form.deadline_time.id_for_label }}" type="time">
+            </div>
+        </div>
+        <div class="my-2">
+            {{ form.tag.errors }}
+            <label class="form-label" for="{{ form.tag.id_for_label }}">{{ form.tag.label }}</label>
+            <select class="form-select" name="tag" id="{{ form.tag.id_for_label }}">
+                {% for option in form.tag %}
+                    {{ option }}
+                {% endfor %}
+            </select>
+        </div>
+        <button class="btn btn-primary w-100" type="submit">создать</button>
+    </form>
+</div>
+{% endblock %}

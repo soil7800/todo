@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="col-6 mx-auto">
+    <h1>{{ task.title }}</h1>
+    {{ task.deadline_date }}
+    <p>{{ task.description }}</p>
+    <div>
+        <h6>Добавить подзадачу</h6>
+    </div>
+</div>
+
+{% endblock %}

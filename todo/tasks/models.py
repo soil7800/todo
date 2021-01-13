@@ -12,6 +12,7 @@ class TaskManager(models.Manager):
             author=user, 
             deadline_date=timezone.now().date(),
             status='active',
+            parent_task=None
         )
         if kwargs.get('tag'):
             queryset = queryset.filter(tag__slug=kwargs['tag'])
@@ -22,6 +23,7 @@ class TaskManager(models.Manager):
             author=user,
             deadline_date__lt=timezone.now().date(), 
             status='active',
+            parent_task=None
         )
         if kwargs.get('tag'):
             queryset = queryset.filter(tag__slug=kwargs['tag'])
@@ -32,15 +34,17 @@ class TaskManager(models.Manager):
             author=user, 
             deadline_date__gt=timezone.now().date(),
             status='active',
+            parent_task=None
         )
         if kwargs.get('tag'):
             queryset = queryset.filter(tag__slug=kwargs['tag'])
         return queryset
     
-    def _get_complited_tasks(self, user, **kwargs):
+    def _get_completed_tasks(self, user, **kwargs):
         queryset = self.filter(
             author=user,
             status='completed',
+            parent_task=None
         )
         if kwargs.get('tag'):
             queryset = queryset.filter(tag__slug=kwargs['tag'])
@@ -50,6 +54,7 @@ class TaskManager(models.Manager):
         queryset = self.filter(
             author=user,
             status='archived',
+            parent_task=None
         )
         return queryset
 
@@ -62,7 +67,7 @@ class TaskManager(models.Manager):
         if task_type == 'coming' or task_type == 'all':
             tasks['coming'] = self._get_coming_tasks(user, tag=kwargs.get('tag'))
         if task_type == 'all':
-            tasks['complited'] = self._get_complited_tasks(user, tag=kwargs.get('tag'))
+            tasks['completed'] = self._get_completed_tasks(user, tag=kwargs.get('tag'))
         return tasks
 
 
@@ -75,7 +80,6 @@ class Task(models.Model):
         ('archived', 'архивированная'),
     ]
     title = models.CharField('Заголовок', max_length=255)
-    description = models.TextField('Описание')
     created = models.DateTimeField('Дата создания', auto_now_add=True)
     updated = models.DateTimeField('Дата последнего изменения', auto_now=True)
     deadline_date = models.DateField('Дата', default=timezone.now)
@@ -86,7 +90,13 @@ class Task(models.Model):
         choices=STATUS_CHOICES, 
         default='active'
     )
-    parent_task = models.ForeignKey('self', on_delete=models.CASCADE, verbose_name='Родительская задача', null=True, blank=True)
+    parent_task = models.ForeignKey(
+        'self', 
+        on_delete=models.CASCADE, 
+        verbose_name='Родительская задача', 
+        null=True, 
+        blank=True
+    )
     author = models.ForeignKey(
         User, 
         on_delete=models.CASCADE, 
@@ -102,6 +112,14 @@ class Task(models.Model):
 
     def __str__(self):
         return self.title
+    
+    def get_child_task_status(self):
+        if self.task_set.count() != 0:
+            return {
+                'completed': self.task_set.filter(status='completed').count(),
+                'all': self.task_set.count()
+            }
+        return None
 
     def get_absolute_url(self):
         return reverse('task-detail', args=[self.id])

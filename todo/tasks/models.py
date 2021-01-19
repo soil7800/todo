@@ -110,9 +110,34 @@ class Task(models.Model):
         blank=True,
     )
 
+    def is_current_year(self):
+        return self.deadline_date.year == timezone.localdate().year
+
     def __str__(self):
         return self.title
-    
+
+    def _check_updated_fields(self):
+        field_check_list = ('tag', 'status')
+        updated_fields = []
+        origin_instance = Task.objects.get(id=self.id)
+        for field in field_check_list:
+            if getattr(origin_instance, field) != getattr(self, field):
+                updated_fields.append(field)
+        return updated_fields or None
+
+    def _update_child_task(self, fields):
+        if fields:
+            for task in self.task_set.all():
+                for field in fields:
+                    setattr(task, field, getattr(self, field))
+                    task.save()
+
+    def save(self, *args, **kwargs):
+        if self.id and self.task_set.all():
+            updated_fields = self._check_updated_fields()
+            self._update_child_task(updated_fields)
+        super().save(*args, **kwargs)
+
     def get_child_task_status(self):
         if self.task_set.count() != 0:
             return {
@@ -161,10 +186,6 @@ class Tag(models.Model):
         self._original_title = self.title
 
     def get_text_color(self):
-        if self.color:
-            print('color - ', self.color, self.title)
-        else:
-            print('color blank - ', self.color, self.title)
         if self.color and int(self.color[1:], 16) < 0x999999:
             return '#fff'
         return '#000'

@@ -23,3 +23,35 @@ th {
 .form-control-color {
     height: 38px !important;
 }
+#check-arrow {
+    fill: none;
+    color: white;
+    pointer-events:all;
+}
+.bi-check-circle:hover #check-arrow {
+    fill: black;
+}
+.task-detail .task-menu{
+    display: none;
+}
+.task-detail:hover .task-menu{
+    display: flex;
+}
+.nav-link .nav-link_tag-menu {
+    display: none;
+}
+.nav-link:hover .nav-link_tag-menu {
+    display: block;
+}
+#tag-collapse-toggle[aria-expanded="false"] .bi-chevron-up{
+    display: none;
+}
+#tag-collapse-toggle[aria-expanded="true"] .bi-chevron-up{
+    display: inline;
+}
+#tag-collapse-toggle[aria-expanded="false"] .bi-chevron-down{
+    display: inline;
+}
+#tag-collapse-toggle[aria-expanded="true"] .bi-chevron-down{
+    display: none;
+}

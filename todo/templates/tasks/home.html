@@ -4,56 +4,125 @@
 
 <div>
     {% for type, queryset in tasks.items %}
-    {% if queryset %}
-    <div {% if type == 'complited' %}class="collapse" id="collapseCompleted"{% endif %}>
-        {% if type == 'overdue' and queryset %}
+    {% if queryset or type == 'today' %}
+    <div {% if type == 'completed' %}class="collapse" id="collapseCompleted"{% endif %}>
+        {% if type == 'overdue' %}
         <h2>Просрочено</h2>
-        {% elif type == 'today' and queryset %}
+        {% elif type == 'today' %}
         <h2>Сегодня</h2>
-        {% elif type == 'coming' and queryset %}
+        {% elif type == 'coming' %}
         <h2>Предстоящие</h2>
-        {% elif type == 'complited' and queryset %}
+        {% elif type == 'completed' %}
         <h2>Завершены</h2>
-        {% elif type == 'archived' and queryset %}
+        {% elif type == 'archived' %}
         <h2>Архив</h2>
         {% endif %}
         {% for task in queryset %}
-        <div class="d-flex bg-light shadow-sm my-3 align-items-center">
-            <div class="pe-3">
-                <form class="" method="POST" action="">
+        <div class="d-flex shadow-sm my-3 align-items-center task-detail">
+            <div class="">
+                <form class="asd" method="POST" action="{% url 'update-task' pk=task.id %}">
                     {% csrf_token %}
-                    
-                    <input type="hidden" type="text" name="id" value="{{ task.id }}">
-                    <button  class="btn" onclick="this.form.submit()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-calendar-check" viewBox="0 0 16 16">
-                            <path d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0z"/>
-                            <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
+                    <input type="hidden" name="toggle_status" value="{% if task.status == 'active' %}completed{% else %}active{% endif %}">
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <button class="btn" type="submit" value="Update">
+                        {% if task.status == 'active'%}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"  class="bi bi-check-circle" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                            <path id="check-arrow" d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
                         </svg>
+                        {% else %}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check-circle-fill" viewBox="0 0 16 16">
+                            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                        </svg>
+                        {% endif %}
                     </button>
                 </form>
             </div>
-            <div class="col-5 me-auto"><a class="text-dark text-decoration-none" href="{{task.get_absolute_url}}">{{ task.title }}</a></div>
-            {% if task.tag %}
-            <div class="px-2"><span class="badge text-dark" style="background-color: {{task.tag.color}}; color: {{task.tag.get_text_color}} !important;">{{ task.tag }}</span></div>
-            {% endif %}
-            <div class="px-2">{{ task.deadline_date|date:"j b Y" }}</div>
+            <div class="d-flex flex-column w-100 pe-2">
+                <div class="d-flex justify-content-between">
+                    <div class="fs-5">
+                        <a class="text-dark text-decoration-none {% if task.status != 'active' %}text-decoration-line-through{% endif %}" href="{{task.get_absolute_url}}">
+                            {{ task.title }}
+                        </a>
+                    </div>
+                    <div class="align-items-center fs-5 task-menu">
+                        <a class="text-secondary me-2" href="{% url 'update-task' pk=task.id %}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                                <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456l-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                                <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
+                            </svg>
+                        </a>
+                        {% if task.status != 'archived' %}
+                        <form action="{% url 'update-task' pk=task.id %}" method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="toggle_status" value="{% if task.status == 'archived' %}active{% else %}archived{% endif %}">
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <button class="btn p-0 text-secondary" type="submit" value="Update">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-archive" viewBox="0 0 16 16">
+                                    <path d="M0 2a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1v7.5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 1 12.5V5a1 1 0 0 1-1-1V2zm2 3v7.5A1.5 1.5 0 0 0 3.5 14h9a1.5 1.5 0 0 0 1.5-1.5V5H2zm13-3H1v2h14V2zM5 7.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/>
+                                </svg>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="d-flex">
+                    {% if task.task_set.count != 0 %}
+                    <div class="me-2 text-secondary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list-nested" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M4.5 11.5A.5.5 0 0 1 5 11h10a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zm-2-4A.5.5 0 0 1 3 7h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm-2-4A.5.5 0 0 1 1 3h10a.5.5 0 0 1 0 1H1a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        {{ task.get_child_task_status.completed }}/{{task.get_child_task_status.all}}
+                    </div>
+                    {% endif %}                       
+                    <div class="text-secondary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-calendar-event" viewBox="0 0 16 16">
+                            <path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1z"/>
+                            <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
+                        </svg>
+                        {% if task.is_current_year %}
+                        {{ task.deadline_date|date:"j b" }}
+                        {% else %}
+                        {{ task.deadline_date|date:"j b Y" }}
+                        {% endif %}
+                    </div>
+                    {% if task.tag %}
+                    <div class="ms-auto">
+                        <a class="tag-link text-secondary text-decoration-none" href="{% url 'todo-list-by-tag' tag=task.tag.slug %}">
+                            <span>{{ task.tag.title }}</span>
+                            {% if task.tag.color %}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="{{ task.tag.color }}" class="bi bi-circle-fill" viewBox="0 0 16 16">
+                                <circle cx="8" cy="8" r="8"/>
+                            </svg>
+                            {% else %}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="align-text-bottom bi bi-circle" viewBox="0 0 16 16">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                            </svg>
+                            {% endif %}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
         {% endfor %}
         {% if type == 'coming' or type == 'today' %}
-        <div>
-            <a class="btn" href="{% url 'add-task' %}">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-calendar-plus" viewBox="0 0 16 16">
-                    <path d="M8 7a.5.5 0 0 1 .5.5V9H10a.5.5 0 0 1 0 1H8.5v1.5a.5.5 0 0 1-1 0V10H6a.5.5 0 0 1 0-1h1.5V7.5A.5.5 0 0 1 8 7z"/>
-                    <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
+        <a class="text-dark text-decoration-none" href="{% url 'add-task' %}{% if view.kwargs.tag %}?tag={{view.kwargs.tag}}{% endif %}">
+        <div class="d-flex my-3 align-items-center">
+            <div class="btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
+                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
                 </svg>
-            </a>
+            </div>            
+            <div>Добавить задачу</div>
         </div>
+        </a>
         {% endif %}
     </div>
-    {% if type == 'complited' %}
+    {% if type == 'completed' %}
     <a class="text-secondary toggleCompleted" data-bs-toggle="collapse" href="#collapseCompleted" role="button" aria-expanded="false" aria-controls="collapseCompleted"></a>
-    {% endif %}           
     {% endif %}
+    {% endif %}           
     {% endfor %}
 </div>
 

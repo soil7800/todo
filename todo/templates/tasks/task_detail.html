@@ -1,12 +1,59 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="col-6 mx-auto">
+<div class="col-8 mx-auto">
+    {% if task.parent_task %}
+    <a class="text-secondary text-decoration-none" href="{{ task.parent_task.get_absolute_url }}">
+        <svg class="align-top" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-90deg-up" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M4.854 1.146a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L4 2.707V12.5A2.5 2.5 0 0 0 6.5 15h8a.5.5 0 0 0 0-1h-8A1.5 1.5 0 0 1 5 12.5V2.707l3.146 3.147a.5.5 0 1 0 .708-.708l-4-4z"/>
+        </svg>
+        {{ task.parent_task.title }}
+    </a>
+    {% elif task.tag %}
+    <div class="">
+        <a href="{% url 'todo-list-by-tag' tag=task.tag.slug %}" class="text-decoration-none badge text-dark" style="background-color: {{task.tag.color}}; color: {{task.tag.get_text_color}} !important;">{{ task.tag }}</a>
+    </div>
+    {% endif %}
     <h1>{{ task.title }}</h1>
     {{ task.deadline_date }}
-    <p>{{ task.description }}</p>
+    {% if task.description %}
     <div>
-        <h6>Добавить подзадачу</h6>
+        <span class="text-secondary">Описание:</span>
+        <p>{{ task.description }}</p>
+    </div>
+    {% endif %}
+    <div>
+        <div class="d-flex flex-row my-2">
+            <a class="btn text-dark text-decoration-none" href="{% url 'add-subtask' pk=task.id %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
+                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                  </svg>
+                Добавить подзадачу
+            </a>
+        </div>
+        {% if task.task_set.all %}
+        {% for child in task.task_set.all %}
+        <div class="d-flex flex-row my-2">
+            <form action="{% url 'update-task' pk=child.id%}" method="POST">
+                {% csrf_token %}
+                <input name="toggle_status" type="hidden" value="{% if child.status == 'active' %}completed{% else %}active{% endif %}">
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <button  class="btn" onclick="this.form.submit()">
+                    {% if child.status == 'completed' %}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle-fill" viewBox="0 0 16 16">
+                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                    </svg>
+                    {% else %}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"  class="bi bi-check-circle" viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                        <path id="check-arrow" d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
+                    </svg>
+                    {% endif %}
+                </button>
+            </form>
+            <a class="text-dark text-decoration-none {% if child.status == 'completed' %}text-decoration-line-through{% endif %}" href="{{ child.get_absolute_url }}">{{ child.title }}</a>
+        </div>
+        {% endfor %}
+        {% endif %}
     </div>
 </div>
-
 {% endblock %}

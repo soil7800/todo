@@ -1,14 +1,18 @@
 from django.urls import path
 
-from .views import Todo, TaskDetail, AddTask, AddTag, UpdateTask
+from .views import TaskList, TaskCreate, TaskDetail, TaskUpdate, TaskDelete,  ProjectCreate, ProjectDetail, ProjectUpdate, ProjectDelete, ProjectAddUser
 
 
 urlpatterns = [
-    path('<str:type>/', Todo.as_view(), name='todo-list-by-type'),
-    path('tag/<slug:tag>/', Todo.as_view(), name='todo-list-by-tag', kwargs={'type': 'all'}),
-    path('task/<int:pk>/', TaskDetail.as_view(), name='task-detail'),
-    path('task/<int:pk>/new_subtask/', AddTask.as_view(), name='add-subtask'),
-    path('todo/new_task/', AddTask.as_view(), name='add-task'),
-    path('todo/new_tag/', AddTag.as_view(), name='add-tag'),
-    path('task/<int:pk>/update/', UpdateTask.as_view(), name='update-task'),
+    path('tasks/', TaskList.as_view(), name='task-list'),
+    path('tasks/new_task/', TaskCreate.as_view(), name='task-create'),
+    path('tasks/<int:pk>/', TaskDetail.as_view(), name='task-detail'),
+    path('tasks/<int:pk>/new_subtask/', TaskCreate.as_view(), name='task-create-subtask'),
+    path('tasks/<int:pk>/update/', TaskUpdate.as_view(), name='task-update'),
+    path('tasks/<int:pk>/delete/', TaskDelete.as_view(), name='task-delete'),
+    path('project/new_project/', ProjectCreate.as_view(), name='project-create'),
+    path('project/<int:pk>/', ProjectDetail.as_view(), name='project-detail'),
+    path('project/<int:pk>/update/', ProjectUpdate.as_view(), name='project-update'),
+    path('project/<int:pk>/delete/', ProjectDelete.as_view(), name='project-delete'),
+    path('project/<int:pk>/add-user/', ProjectAddUser.as_view(), name='project-add-user'),
 ]

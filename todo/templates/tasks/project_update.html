@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="col-10 mx-auto">
+    <h2>Редактирование проекта:</h2>
+    <form method="POST" action="{{ project.get_update_url }}">
+        {% csrf_token %}
+        <label class="form-label" for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+        <div class="input-group mb-3">
+            <input id="{{ form.title.id_for_label }}" class="form-control" type="text" name="title" maxlength="{{ form.title.field.max_length }}" value="{{ form.title.value }}">
+            <input type="color" class="form-control form-control-color" id="{{ form.color.id_for_label }}" value="{{ form.color.value }}" name="color" maxlength="{{ form.color.field.max_length }}">   
+        </div>
+        <p>Участники проекта:</p>
+        <table class="table table-light table-striped table-bordered ">
+            <thead class="align-middle">
+                <tr>
+                    <th rowspan="2">№</th>
+                    <th class="" rowspan="2">Участник</th>
+                    <th colspan="3">права</th>
+                    <th rowspan="2">Удалить?</th>
+                </tr>
+                <tr>
+                    <th>создание</th>
+                    <th>обновление</th>
+                    <th>удаление</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in project.permission_to_reed.all%}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td><input id="user_{{user.id}}_permission_to_reed" value="{{ user.id }}" name="permission_to_reed" type="hidden">{{ user.email }}</td>
+                    <td><input id="user_{{user.id}}_permission_to_create" value="{{ user.id }}" name="permission_to_create" {% if user in project.permission_to_create.all %}checked{% endif %} type="checkbox"></td>
+                    <td><input id="user_{{user.id}}_permission_to_update" value="{{ user.id }}" name="permission_to_update" {% if user in project.permission_to_update.all %}checked{% endif %} type="checkbox"></td>
+                    <td><input id="user_{{user.id}}_permission_to_delete" value="{{ user.id }}" name="permission_to_delete" {% if user in project.permission_to_delete.all %}checked{% endif %} type="checkbox"></td>
+                    <td><input value="{{ user.id }}" name="delete_user" type="checkbox"></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="" data-bs-toggle="modal" data-bs-target="#exampleModal">Добавить участника</a>
+        <div class="d-flex justify-content-end">
+            <a class="btn btn-secondary me-3" href="{{ project.get_absolute_url }}">Отменить</a>
+            <button class="btn btn-success" type="submit" value="Update">Сохранить</button>
+        </div>
+        {{form.errors}}
+    </form>
+</div>
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Добавить участника</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form method="POST" action="{{ project.get_add_user_url }}">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="">
+                    <label for="exampleFormControlInput1" class="form-label">Email пользователя</label>
+                    <input type="email" class="form-control" id="exampleFormControlInput1" placeholder="name@example.com" name="user_email">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отменить</button>
+                <button type="submit" class="btn btn-primary">Добавить</button>
+            </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

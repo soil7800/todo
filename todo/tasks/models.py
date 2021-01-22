@@ -1,7 +1,9 @@
 from django.db import models
+from django.db.models.signals import post_save
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.urls import reverse
+
 
 from .utils import generate_slug_from_russian
 
@@ -14,8 +16,8 @@ class TaskManager(models.Manager):
             status='active',
             parent_task=None
         )
-        if kwargs.get('tag'):
-            queryset = queryset.filter(tag__slug=kwargs['tag'])
+        if kwargs.get('project'):
+            queryset = queryset.filter(project__id=kwargs['project'])
         return queryset
     
     def _get_overdue_tasks(self, user, **kwargs):
@@ -25,8 +27,8 @@ class TaskManager(models.Manager):
             status='active',
             parent_task=None
         )
-        if kwargs.get('tag'):
-            queryset = queryset.filter(tag__slug=kwargs['tag'])
+        if kwargs.get('project'):
+            queryset = queryset.filter(project__id=kwargs['project'])
         return queryset
     
     def _get_coming_tasks(self, user, **kwargs):
@@ -36,8 +38,8 @@ class TaskManager(models.Manager):
             status='active',
             parent_task=None
         )
-        if kwargs.get('tag'):
-            queryset = queryset.filter(tag__slug=kwargs['tag'])
+        if kwargs.get('project'):
+            queryset = queryset.filter(project__id=kwargs['project'])
         return queryset
     
     def _get_completed_tasks(self, user, **kwargs):
@@ -46,8 +48,8 @@ class TaskManager(models.Manager):
             status='completed',
             parent_task=None
         )
-        if kwargs.get('tag'):
-            queryset = queryset.filter(tag__slug=kwargs['tag'])
+        if kwargs.get('project'):
+            queryset = queryset.filter(project__id=kwargs['project'])
         return queryset
     
     def _get_archived_tasks(self, user):
@@ -61,13 +63,13 @@ class TaskManager(models.Manager):
     def get_tasks(self, user, task_type, **kwargs):
         if task_type == 'archived':
             return {'archived': self._get_archived_tasks(user)}
-        tasks = {'overdue': self._get_overdue_tasks(user, tag=kwargs.get('tag'))}
+        tasks = {'overdue': self._get_overdue_tasks(user, project=kwargs.get('project_id'))}
         if task_type == 'today' or task_type == 'all':
-            tasks['today'] = self._get_today_tasks(user, tag=kwargs.get('tag'))
+            tasks['today'] = self._get_today_tasks(user, project=kwargs.get('project_id'))
         if task_type == 'coming' or task_type == 'all':
-            tasks['coming'] = self._get_coming_tasks(user, tag=kwargs.get('tag'))
+            tasks['coming'] = self._get_coming_tasks(user, project=kwargs.get('project_id'))
         if task_type == 'all':
-            tasks['completed'] = self._get_completed_tasks(user, tag=kwargs.get('tag'))
+            tasks['completed'] = self._get_completed_tasks(user, project=kwargs.get('project_id'))
         return tasks
 
 
@@ -102,10 +104,10 @@ class Task(models.Model):
         on_delete=models.CASCADE, 
         verbose_name='Автор'
     )
-    tag = models.ForeignKey(
-        to='Tag', 
+    project = models.ForeignKey(
+        to='Project', 
         on_delete=models.CASCADE, 
-        verbose_name='Тег', 
+        verbose_name='Проект', 
         null=True,
         blank=True,
     )
@@ -113,11 +115,22 @@ class Task(models.Model):
     def is_current_year(self):
         return self.deadline_date.year == timezone.localdate().year
 
+    def is_overdue(self):
+        if self.deadline_date == timezone.localdate():
+            if not self.deadline_time or self.deadline_time > timezone.localtime().time():
+                return False
+            return True
+        elif self.deadline_date < timezone.localdate():
+            return True
+        else:
+            return False
+        
+
     def __str__(self):
         return self.title
 
     def _check_updated_fields(self):
-        field_check_list = ('tag', 'status')
+        field_check_list = ('project', 'status')
         updated_fields = []
         origin_instance = Task.objects.get(id=self.id)
         for field in field_check_list:
@@ -147,54 +160,97 @@ class Task(models.Model):
         return None
 
     def get_absolute_url(self):
-        return reverse('task-detail', args=[self.id])
+        return reverse('task-detail', kwargs={'pk': self.id})
+    
+    def get_update_url(self):
+        return reverse('task-update', kwargs={'pk': self.id})
+
+    def get_delete_url(self):
+        return reverse('task-delete', kwargs={'pk': self.id})
 
     class Meta:
         verbose_name = 'Задача'
         verbose_name_plural = 'Задачи'
 
 
-class Tag(models.Model):
-    """Тэг для задач."""
+class Project(models.Model):
+    """"""
 
     title = models.CharField('Заголовок', max_length=255)
-    _original_title = None
-    slug = models.SlugField(max_length=255, blank=True)
-    author = models.ForeignKey(
-        User, 
-        on_delete=models.CASCADE, 
-        verbose_name='Автор'
-    )
     color = models.CharField(
         'Цвет', 
         max_length=100, 
         blank=True, 
         default=None,
     )
-
-    def __str__(self):
-        return self.title
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._original_title = self.title
-
-    def save(self, *args, **kwargs):
-        if not self.id or self.title != self._original_title:
-            self.slug = generate_slug_from_russian(self.title)
-        super().save(*args, **kwargs)
-        self._original_title = self.title
-
-    def get_text_color(self):
-        if self.color and int(self.color[1:], 16) < 0x999999:
-            return '#fff'
-        return '#000'
+    owner = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        verbose_name='Владелец'
+    )
+    permission_to_create = models.ManyToManyField(
+        User, 
+        related_name='permission_to_create',
+        blank=True
+    )
+    permission_to_reed = models.ManyToManyField(
+        User, 
+        related_name='permission_to_reed',
+        blank=True
+    )
+    permission_to_update = models.ManyToManyField(
+        User, 
+        related_name='permission_to_update',
+        blank=True
+    )
+    permission_to_delete = models.ManyToManyField(
+        User, 
+        related_name='permission_to_delete',
+        blank=True
+    )
 
     class Meta:
-        verbose_name = 'Тег'
-        verbose_name_plural = 'Теги'
+        verbose_name = 'Проект'
+        verbose_name_plural = 'Проекты'
         constraints = [
-            models.UniqueConstraint(fields=['author', 'title'], name='unique-title')
+            models.UniqueConstraint(fields=['owner', 'title'], name='unique-title')
         ]
     
+    def __str__(self):
+        return self.title
+    
+    def get_absolute_url(self):
+        return reverse('project-detail', kwargs={'pk': self.id})
+    
+    def get_update_url(self):
+        return reverse('project-update', kwargs={'pk': self.id})
 
+    def get_delete_url(self):
+        return reverse('project-delete', kwargs={'pk': self.id})
+    
+    def get_add_user_url(self):
+        return reverse('project-add-user', kwargs={'pk': self.id})
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'Профиль пользователя'
+        verbose_name_plural = 'Профили пользователей'
+
+    def __str__(self):
+        return str(self.user)
+
+    def get_projects(self):
+        user_projects = self.user.project_set.all()
+        available_projects = self.user.permission_to_reed.all().exclude(owner=self.user)
+        all_projects = user_projects.union(available_projects)
+        return all_projects
+
+
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+
+post_save.connect(create_user_profile, sender=User)

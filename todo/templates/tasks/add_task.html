@@ -1,8 +1,13 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="mx-auto col-6">
+    {% if parent_task %}
+    <a href="{{ parent_task.get_absolute_url }}">{{ parent_task }}</a>
+    <h2>Новая подзадача:</h2>
+    {% else %}
     <h2>Новая задача:</h2>
-    <form method="POST" action="{% url 'add-task' %}">
+    {% endif %}
+    <form method="POST" action="{% if parent_task %}{% url 'task-create-subtask' pk=parent_task.id %}{% else %}{% url 'task-create' %}{%endif%}">
         {% csrf_token %}
         <div class="my-2">
             {{ form.title.errors }}
@@ -22,10 +27,10 @@
             </div>
         </div>
         <div class="my-2">
-            {{ form.tag.errors }}
-            <label class="form-label" for="{{ form.tag.id_for_label }}">{{ form.tag.label }}</label>
-            <select class="form-select" name="tag" id="{{ form.tag.id_for_label }}">
-                {% for option in form.tag %}
+            {{ form.project.errors }}
+            <label class="form-label" for="{{ form.project.id_for_label }}">{{ form.project.label }}</label>
+            <select class="form-select" name="project" id="{{ form.project.id_for_label }}">
+                {% for option in form.project %}
                     {{ option }}
                 {% endfor %}
             </select>

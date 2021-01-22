@@ -8,9 +8,9 @@
         </svg>
         {{ task.parent_task.title }}
     </a>
-    {% elif task.tag %}
+    {% elif task.project %}
     <div class="">
-        <a href="{% url 'todo-list-by-tag' tag=task.tag.slug %}" class="text-decoration-none badge text-dark" style="background-color: {{task.tag.color}}; color: {{task.tag.get_text_color}} !important;">{{ task.tag }}</a>
+        <a href="{{ task.project.get_absolute_url }}" class="text-decoration-none text-secondary" >{{ task.project }}</a>
     </div>
     {% endif %}
     <h1>{{ task.title }}</h1>
@@ -23,7 +23,7 @@
     {% endif %}
     <div>
         <div class="d-flex flex-row my-2">
-            <a class="btn text-dark text-decoration-none" href="{% url 'add-subtask' pk=task.id %}">
+            <a class="btn text-dark text-decoration-none" href="{% url 'task-create-subtask' pk=task.id %}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
                     <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
                   </svg>
@@ -33,7 +33,7 @@
         {% if task.task_set.all %}
         {% for child in task.task_set.all %}
         <div class="d-flex flex-row my-2">
-            <form action="{% url 'update-task' pk=child.id%}" method="POST">
+            <form action="{{ child.get_update_url }}" method="POST">
                 {% csrf_token %}
                 <input name="toggle_status" type="hidden" value="{% if child.status == 'active' %}completed{% else %}active{% endif %}">
                 <input type="hidden" name="next" value="{{ request.path }}">

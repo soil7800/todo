@@ -20,7 +20,7 @@
         {% for task in queryset %}
         <div class="d-flex shadow-sm my-3 align-items-center task-detail">
             <div class="">
-                <form class="asd" method="POST" action="{% url 'update-task' pk=task.id %}">
+                <form class="asd" method="POST" action="{% url 'task-update' pk=task.id %}">
                     {% csrf_token %}
                     <input type="hidden" name="toggle_status" value="{% if task.status == 'active' %}completed{% else %}active{% endif %}">
                     <input type="hidden" name="next" value="{{ request.path }}">
@@ -41,19 +41,19 @@
             <div class="d-flex flex-column w-100 pe-2">
                 <div class="d-flex justify-content-between">
                     <div class="fs-5">
-                        <a class="text-dark text-decoration-none {% if task.status != 'active' %}text-decoration-line-through{% endif %}" href="{{task.get_absolute_url}}">
+                        <a class="text-dark text-decoration-none {% if task.status != 'active' %}text-decoration-line-through{% endif %}" href="{{ task.get_absolute_url }}">
                             {{ task.title }}
                         </a>
                     </div>
                     <div class="align-items-center fs-5 task-menu">
-                        <a class="text-secondary me-2" href="{% url 'update-task' pk=task.id %}">
+                        <a class="text-secondary me-2" href="{{ task.get_update_url }}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
                                 <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456l-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
                                 <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
                             </svg>
                         </a>
                         {% if task.status != 'archived' %}
-                        <form action="{% url 'update-task' pk=task.id %}" method="POST">
+                        <form action="{% url 'task-update' pk=task.id %}" method="POST">
                             {% csrf_token %}
                             <input type="hidden" name="toggle_status" value="{% if task.status == 'archived' %}active{% else %}archived{% endif %}">
                             <input type="hidden" name="next" value="{{ request.path }}">
@@ -86,12 +86,12 @@
                         {{ task.deadline_date|date:"j b Y" }}
                         {% endif %}
                     </div>
-                    {% if task.tag %}
+                    {% if task.project %}
                     <div class="ms-auto">
-                        <a class="tag-link text-secondary text-decoration-none" href="{% url 'todo-list-by-tag' tag=task.tag.slug %}">
-                            <span>{{ task.tag.title }}</span>
-                            {% if task.tag.color %}
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="{{ task.tag.color }}" class="bi bi-circle-fill" viewBox="0 0 16 16">
+                        <a class="tag-link text-secondary text-decoration-none" href="{{ project.get_absolute_url }}">
+                            <span>{{ task.project.title }}</span>
+                            {% if task.project.color %}
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="{{ task.project.color }}" class="bi bi-circle-fill" viewBox="0 0 16 16">
                                 <circle cx="8" cy="8" r="8"/>
                             </svg>
                             {% else %}
@@ -107,7 +107,7 @@
         </div>
         {% endfor %}
         {% if type == 'coming' or type == 'today' %}
-        <a class="text-dark text-decoration-none" href="{% url 'add-task' %}{% if view.kwargs.tag %}?tag={{view.kwargs.tag}}{% endif %}">
+        <a class="text-dark text-decoration-none" href="{% url 'task-create' %}">
         <div class="d-flex my-3 align-items-center">
             <div class="btn">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">

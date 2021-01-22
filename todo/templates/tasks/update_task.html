@@ -22,10 +22,10 @@
             </div>
         </div>
         <div class="my-2">
-            {{ form.tag.errors }}
-            <label class="form-label" for="{{ form.tag.id_for_label }}">{{ form.tag.label }}</label>
-            <select class="form-select" name="tag" id="{{ form.tag.id_for_label }}">
-                {% for option in form.tag %}
+            {{ form.project.errors }}
+            <label class="form-label" for="{{ form.project.id_for_label }}">{{ form.project.label }}</label>
+            <select class="form-select" name="project" id="{{ form.project.id_for_label }}">
+                {% for option in form.project %}
                     {{ option }}
                 {% endfor %}
             </select>

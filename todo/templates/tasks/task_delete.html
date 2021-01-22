@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="col-6 mx-auto">
+    <h1>{{task.title}}</h1>
+    <p>Вы уверены что хотите удалить задачу?</p>
+    <form method="POST" action="{{ task.get_delete_url }}">
+        {% csrf_token %}
+        <div class="d-flex justify-content-between">
+            <a class=" btn btn-secondary" href="{{ task.get_absolute_url }}">Отменить</a>
+            <button class="btn btn-danger" value="Confirm" type="submit">Удалить</button>    
+        </div>
+    </form>
+</div>
+{% endblock %}

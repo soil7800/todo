@@ -2,7 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from .models import Task, Tag
+from .models import Task, Project
 
 
 class TaskForm(forms.ModelForm):
@@ -12,20 +12,19 @@ class TaskForm(forms.ModelForm):
             'title', 
             'deadline_date', 
             'deadline_time', 
-            'tag', 
+            'project', 
         ]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, user, *args, **kwargs):
         super().__init__(*args, **kwargs)
         try:
-            if self.initial.get('author'):
-                author = self.initial.get('author')
-            else:
-                author = self.instance.author
+            author = self.instance.author
         except Task.author.RelatedObjectDoesNotExist:
-            return
+            author = None
+        if author and author != user:
+            self.fields['project'].queryset = self.instance.project
         else:
-            self.fields['tag'].queryset = Tag.objects.filter(author=author)   
+            self.fields['project'].queryset = Project.objects.filter(owner=user)
     
     def clean_deadline_date(self):
         data = self.cleaned_data['deadline_date']
@@ -39,7 +38,6 @@ class TaskForm(forms.ModelForm):
         return data
     
     def clean_deadline_time(self):
-        print('очищеные данные - ', self.cleaned_data.get('deadline_date'), self.cleaned_data.get('deadline_time'))
         date = self.cleaned_data.get('deadline_date')
         time = self.cleaned_data.get('deadline_time')
         parrent_task = self.instance.parent_task
@@ -50,7 +48,18 @@ class TaskForm(forms.ModelForm):
             raise ValidationError('Нельзя выбрать прошедшее время')
         return time
 
-class TagForm(forms.ModelForm):
+
+class ProjectForm(forms.ModelForm):
     class Meta:
-        model = Tag
-        fields = ['title', 'color']
+        model = Project
+        fields = [
+            'title',
+            'color',
+            'permission_to_reed',
+            'permission_to_create',
+            'permission_to_update',
+            'permission_to_delete',
+        ]
+
+class ProjectAddUser(forms.ModelForm):
+    pass
